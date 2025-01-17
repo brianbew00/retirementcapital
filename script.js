@@ -53,16 +53,16 @@ function calculateCapital() {
   monthlyTableData.push({
     year: "Initial",
     month: "",
-    income: 0,
-    afterTaxReturn: 0,
+    income: null, // No income for the initial row
+    afterTaxReturn: null, // No returns for the initial row
     accountBalance: accountBalance,
   });
 
   // Populate monthly table data with corrected offsets
   monthlyData.forEach(({ year, month, income }, index) => {
-    const previousBalance = index === 0 ? totalCapital : parseFloat(monthlyTableData[index].accountBalance);
-    const afterTaxReturn = (previousBalance - income) * monthlyReturnRate;
-    const currentBalance = previousBalance - income + afterTaxReturn;
+    const previousBalance = index === 0 ? totalCapital : Math.max(0, parseFloat(monthlyTableData[index].accountBalance));
+    const afterTaxReturn = Math.max(0, (previousBalance - income) * monthlyReturnRate);
+    const currentBalance = Math.max(0, previousBalance - income + afterTaxReturn);
 
     monthlyTableData.push({
       year: year,
@@ -77,8 +77,8 @@ function calculateCapital() {
   const annualTableData = [
     {
       year: "Initial",
-      income: 0,
-      afterTaxReturn: 0,
+      income: null, // No income for the initial row
+      afterTaxReturn: null, // No returns for the initial row
       accountBalance: totalCapital,
     },
   ];
@@ -87,7 +87,7 @@ function calculateCapital() {
     const annualData = monthlyTableData.filter(row => row.year === year && row.month !== "");
     const annualIncome = annualData.reduce((sum, row) => sum + parseFloat(row.income), 0);
     const annualReturns = annualData.reduce((sum, row) => sum + parseFloat(row.afterTaxReturn), 0);
-    const endingBalance = parseFloat(annualData[11]?.accountBalance || 0);
+    const endingBalance = Math.max(0, parseFloat(annualData[11]?.accountBalance || 0));
     annualTableData.push({
       year: year,
       income: annualIncome,
@@ -105,18 +105,24 @@ function calculateCapital() {
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: monthlyTableData.map(row => row.month ? `Year ${row.year} Month ${row.month}` : "Initial"),
+      labels: monthlyTableData
+        .filter(row => row.year !== "Initial") // Exclude initial row
+        .map(row => `Year ${row.year} Month ${row.month}`),
       datasets: [
         {
           label: 'Account Balance',
-          data: monthlyTableData.map(row => parseFloat(row.accountBalance)),
+          data: monthlyTableData
+            .filter(row => row.year !== "Initial") // Exclude initial row
+            .map(row => parseFloat(row.accountBalance)),
           borderColor: 'blue',
           fill: false,
           yAxisID: 'y',
         },
         {
           label: 'Income',
-          data: monthlyTableData.map(row => parseFloat(row.income)),
+          data: monthlyTableData
+            .filter(row => row.year !== "Initial") // Exclude initial row
+            .map(row => parseFloat(row.income)),
           borderColor: 'green',
           fill: false,
           yAxisID: 'y1',
@@ -153,7 +159,7 @@ function calculateCapital() {
   let monthlyTableHTML = '<table border="1" style="width: 100%; border-collapse: collapse;">';
   monthlyTableHTML += '<tr><th>Year</th><th>Month</th><th>Income ($)</th><th>After-Tax Return ($)</th><th>Account Balance ($)</th></tr>';
   monthlyTableData.forEach(row => {
-    monthlyTableHTML += `<tr><td>${row.year}</td><td>${row.month}</td><td>${formatCurrency(row.income)}</td><td>${formatCurrency(row.afterTaxReturn)}</td><td>${formatCurrency(row.accountBalance)}</td></tr>`;
+    monthlyTableHTML += `<tr><td>${row.year}</td><td>${row.month}</td><td>${row.income ? formatCurrency(row.income) : ""}</td><td>${row.afterTaxReturn ? formatCurrency(row.afterTaxReturn) : ""}</td><td>${formatCurrency(row.accountBalance)}</td></tr>`;
   });
   monthlyTableHTML += '</table>';
 
@@ -161,7 +167,7 @@ function calculateCapital() {
   let annualTableHTML = '<table border="1" style="width: 100%; border-collapse: collapse;">';
   annualTableHTML += '<tr><th>Year</th><th>Income ($)</th><th>After-Tax Return ($)</th><th>Account Balance ($)</th></tr>';
   annualTableData.forEach(row => {
-    annualTableHTML += `<tr><td>${row.year}</td><td>${formatCurrency(row.income)}</td><td>${formatCurrency(row.afterTaxReturn)}</td><td>${formatCurrency(row.accountBalance)}</td></tr>`;
+    annualTableHTML += `<tr><td>${row.year}</td><td>${row.income ? formatCurrency(row.income) : ""}</td><td>${row.afterTaxReturn ? formatCurrency(row.afterTaxReturn) : ""}</td><td>${formatCurrency(row.accountBalance)}</td></tr>`;
   });
   annualTableHTML += '</table>';
 
