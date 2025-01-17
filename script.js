@@ -13,20 +13,22 @@ function calculateCapital() {
   // Calculate monthly return rate
   const monthlyReturnRate = Math.pow(1 + returnRate, 1 / 12) - 1;
 
-  // Calculate total capital needed using beginning-of-period logic (monthly)
+  // Calculate total capital needed using beginning-of-period logic with annual inflation adjustment
   let totalCapital = 0;
   const monthlyData = [];
   for (let year = 1; year <= years; year++) {
+    const annualIncome = income * Math.pow(1 + inflationRate, year - 1);
+    const monthlyIncome = annualIncome / 12;
+
     for (let month = 1; month <= 12; month++) {
       const monthsElapsed = (year - 1) * 12 + month - 1;
-      const monthlyIncome = income * Math.pow(1 + inflationRate, monthsElapsed / 12) / 12;
       const presentValue = monthlyIncome / Math.pow(1 + monthlyReturnRate, monthsElapsed);
       totalCapital += presentValue;
 
       monthlyData.push({
         year: year,
         month: month,
-        income: monthlyIncome,
+        income: month === 1 ? annualIncome / 12 : monthlyIncome,
         presentValue: presentValue,
       });
     }
