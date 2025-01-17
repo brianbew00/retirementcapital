@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", () => {
   calculateCapital(); // Trigger calculation on page load with default values
 });
@@ -100,29 +99,23 @@ function calculateCapital() {
   document.getElementById('result').textContent = 
     `Total Retirement Capital Needed: ${formatCurrency(totalCapital)}`;
 
-  // Populate chart
+  // Populate chart based on annual data
   const ctx = document.getElementById('chart').getContext('2d');
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: monthlyTableData
-        .filter(row => row.year !== "Initial") // Exclude initial row
-        .map(row => `Year ${row.year} Month ${row.month}`),
+      labels: annualTableData.map(row => row.year !== "Initial" ? `Year ${row.year}` : "Initial"),
       datasets: [
         {
           label: 'Account Balance',
-          data: monthlyTableData
-            .filter(row => row.year !== "Initial") // Exclude initial row
-            .map(row => parseFloat(row.accountBalance)),
+          data: annualTableData.map(row => row.accountBalance),
           borderColor: 'blue',
           fill: false,
           yAxisID: 'y',
         },
         {
           label: 'Income',
-          data: monthlyTableData
-            .filter(row => row.year !== "Initial") // Exclude initial row
-            .map(row => parseFloat(row.income)),
+          data: annualTableData.map(row => row.income || 0),
           borderColor: 'green',
           fill: false,
           yAxisID: 'y1',
