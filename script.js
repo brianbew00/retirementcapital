@@ -112,16 +112,16 @@ function calculateCapital() {
       labels: annualTableData.map(row => row.year !== "Initial" ? `Year ${row.year}` : "Initial"),
       datasets: [
         {
-          label: 'Account Balance',
-          data: annualTableData.map(row => row.accountBalance),
-          borderColor: 'blue',
+          label: 'Income',
+          data: annualTableData.map(row => row.year === "Initial" ? null : row.income || 0), // Exclude initial income
+          borderColor: 'green',
           fill: false,
           yAxisID: 'y',
         },
         {
-          label: 'Income',
-          data: annualTableData.map(row => row.income || 0),
-          borderColor: 'green',
+          label: 'Account Balance',
+          data: annualTableData.map(row => row.accountBalance),
+          borderColor: 'blue',
           fill: false,
           yAxisID: 'y1',
         },
@@ -134,7 +134,7 @@ function calculateCapital() {
           position: 'left',
           title: {
             display: true,
-            text: 'Account Balance ($)',
+            text: 'Income ($)',
           },
         },
         y1: {
@@ -142,7 +142,7 @@ function calculateCapital() {
           position: 'right',
           title: {
             display: true,
-            text: 'Income ($)',
+            text: 'Account Balance ($)',
           },
           grid: {
             drawOnChartArea: false,
