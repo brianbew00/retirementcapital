@@ -47,17 +47,19 @@ function calculateCapital() {
     accountBalance: accountBalance.toFixed(2),
   });
 
-  // Populate monthly table data
-  monthlyData.forEach(({ year, month, income }) => {
-    const afterTaxReturn = (accountBalance - income) * monthlyReturnRate;
+  // Populate monthly table data with corrected offsets
+  monthlyData.forEach(({ year, month, income }, index) => {
+    const previousBalance = index === 0 ? totalCapital : parseFloat(monthlyTableData[index].accountBalance);
+    const afterTaxReturn = (previousBalance - income) * monthlyReturnRate;
+    const currentBalance = previousBalance - income + afterTaxReturn;
+
     monthlyTableData.push({
       year: year,
       month: month,
       income: income.toFixed(2),
       afterTaxReturn: afterTaxReturn.toFixed(2),
-      accountBalance: accountBalance.toFixed(2),
+      accountBalance: currentBalance.toFixed(2),
     });
-    accountBalance = accountBalance - income + afterTaxReturn;
   });
 
   // Aggregate annual data
