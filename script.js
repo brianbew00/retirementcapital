@@ -3,6 +3,17 @@ document.addEventListener("DOMContentLoaded", () => {
   calculateCapital(); // Trigger calculation on page load with default values
 });
 
+function formatCurrency(value) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(value);
+}
+
+function formatPercent(value) {
+  return `${(value * 100).toFixed(2)}%`;
+}
+
 function calculateCapital() {
   // Input values
   const income = parseFloat(document.getElementById('income').value);
@@ -44,7 +55,7 @@ function calculateCapital() {
     month: "",
     income: 0,
     afterTaxReturn: 0,
-    accountBalance: accountBalance.toFixed(2),
+    accountBalance: accountBalance,
   });
 
   // Populate monthly table data with corrected offsets
@@ -56,14 +67,22 @@ function calculateCapital() {
     monthlyTableData.push({
       year: year,
       month: month,
-      income: income.toFixed(2),
-      afterTaxReturn: afterTaxReturn.toFixed(2),
-      accountBalance: currentBalance.toFixed(2),
+      income: income,
+      afterTaxReturn: afterTaxReturn,
+      accountBalance: currentBalance,
     });
   });
 
-  // Aggregate annual data
-  const annualTableData = [];
+  // Aggregate annual data, including the initial row
+  const annualTableData = [
+    {
+      year: "Initial",
+      income: 0,
+      afterTaxReturn: 0,
+      accountBalance: totalCapital,
+    },
+  ];
+
   for (let year = 1; year <= years; year++) {
     const annualData = monthlyTableData.filter(row => row.year === year && row.month !== "");
     const annualIncome = annualData.reduce((sum, row) => sum + parseFloat(row.income), 0);
@@ -71,15 +90,15 @@ function calculateCapital() {
     const endingBalance = parseFloat(annualData[11]?.accountBalance || 0);
     annualTableData.push({
       year: year,
-      income: annualIncome.toFixed(2),
-      afterTaxReturn: annualReturns.toFixed(2),
-      accountBalance: endingBalance.toFixed(2),
+      income: annualIncome,
+      afterTaxReturn: annualReturns,
+      accountBalance: endingBalance,
     });
   }
 
   // Display total capital needed
   document.getElementById('result').textContent = 
-    `Total Retirement Capital Needed: $${totalCapital.toFixed(2)}`;
+    `Total Retirement Capital Needed: ${formatCurrency(totalCapital)}`;
 
   // Populate chart
   const ctx = document.getElementById('chart').getContext('2d');
@@ -93,19 +112,37 @@ function calculateCapital() {
           data: monthlyTableData.map(row => parseFloat(row.accountBalance)),
           borderColor: 'blue',
           fill: false,
+          yAxisID: 'y',
         },
         {
           label: 'Income',
           data: monthlyTableData.map(row => parseFloat(row.income)),
           borderColor: 'green',
           fill: false,
+          yAxisID: 'y1',
         },
       ],
     },
     options: {
       scales: {
         y: {
-          beginAtZero: true,
+          type: 'linear',
+          position: 'left',
+          title: {
+            display: true,
+            text: 'Account Balance ($)',
+          },
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          title: {
+            display: true,
+            text: 'Income ($)',
+          },
+          grid: {
+            drawOnChartArea: false,
+          },
         },
       },
     },
@@ -116,7 +153,7 @@ function calculateCapital() {
   let monthlyTableHTML = '<table border="1" style="width: 100%; border-collapse: collapse;">';
   monthlyTableHTML += '<tr><th>Year</th><th>Month</th><th>Income ($)</th><th>After-Tax Return ($)</th><th>Account Balance ($)</th></tr>';
   monthlyTableData.forEach(row => {
-    monthlyTableHTML += `<tr><td>${row.year}</td><td>${row.month}</td><td>${row.income}</td><td>${row.afterTaxReturn}</td><td>${row.accountBalance}</td></tr>`;
+    monthlyTableHTML += `<tr><td>${row.year}</td><td>${row.month}</td><td>${formatCurrency(row.income)}</td><td>${formatCurrency(row.afterTaxReturn)}</td><td>${formatCurrency(row.accountBalance)}</td></tr>`;
   });
   monthlyTableHTML += '</table>';
 
@@ -124,15 +161,15 @@ function calculateCapital() {
   let annualTableHTML = '<table border="1" style="width: 100%; border-collapse: collapse;">';
   annualTableHTML += '<tr><th>Year</th><th>Income ($)</th><th>After-Tax Return ($)</th><th>Account Balance ($)</th></tr>';
   annualTableData.forEach(row => {
-    annualTableHTML += `<tr><td>${row.year}</td><td>${row.income}</td><td>${row.afterTaxReturn}</td><td>${row.accountBalance}</td></tr>`;
+    annualTableHTML += `<tr><td>${row.year}</td><td>${formatCurrency(row.income)}</td><td>${formatCurrency(row.afterTaxReturn)}</td><td>${formatCurrency(row.accountBalance)}</td></tr>`;
   });
   annualTableHTML += '</table>';
 
   tableContainer.innerHTML = `
-    <button onclick="toggleTable('monthly')">View Monthly</button>
     <button onclick="toggleTable('annual')">View Annual</button>
-    <div id="monthly-table" style="display: block;">${monthlyTableHTML}</div>
-    <div id="annual-table" style="display: none;">${annualTableHTML}</div>
+    <button onclick="toggleTable('monthly')">View Monthly</button>
+    <div id="annual-table" style="display: block;">${annualTableHTML}</div>
+    <div id="monthly-table" style="display: none;">${monthlyTableHTML}</div>
   `;
 }
 
