@@ -16,24 +16,25 @@ function calculateCapital() {
   // Arrays to store data for chart and table
   let balances = [];
   let incomes = [];
-  let afterTaxReturns = [];
   let yearLabels = [];
-  let totalCapital = income / returnRate; // Initial account balance
+  let totalCapital = 0;
 
-  let accountBalance = totalCapital;
-
-  // Loop to calculate income, after-tax return, and account balance for each year
+  // Loop to calculate total capital needed using precise formula
   for (let year = 1; year <= years; year++) {
     const annualIncome = income * Math.pow(1 + inflationRate, year - 1);
-    const annualReturn = accountBalance * returnRate;
-    const annualBalance = accountBalance + annualReturn - annualIncome;
+    const monthlyIncome = annualIncome / 12;
 
+    let yearBalance = 0;
+    for (let month = 1; month <= 12; month++) {
+      const monthsElapsed = (year - 1) * 12 + month;
+      const presentValue = monthlyIncome / Math.pow(1 + monthlyReturnRate, monthsElapsed);
+      totalCapital += presentValue;
+      yearBalance += presentValue;
+    }
+
+    balances.push(yearBalance);
     incomes.push(annualIncome);
-    afterTaxReturns.push(annualReturn);
-    balances.push(annualBalance > 0 ? annualBalance : 0);
     yearLabels.push(`Year ${year}`);
-
-    accountBalance = annualBalance > 0 ? annualBalance : 0;
   }
 
   // Display total capital needed
@@ -48,7 +49,7 @@ function calculateCapital() {
       labels: yearLabels,
       datasets: [
         {
-          label: 'Account Balance',
+          label: 'Account Balance (Annual PV)',
           data: balances,
           borderColor: 'blue',
           fill: false,
@@ -73,9 +74,9 @@ function calculateCapital() {
   // Populate table
   const tableContainer = document.getElementById('table-container');
   let tableHTML = '<table border="1" style="width: 100%; border-collapse: collapse;">';
-  tableHTML += '<tr><th>Year</th><th>Income ($)</th><th>After-Tax Return ($)</th><th>Account Balance ($)</th></tr>';
+  tableHTML += '<tr><th>Year</th><th>Income ($)</th><th>Account Balance (Annual PV) ($)</th></tr>';
   for (let i = 0; i < years; i++) {
-    tableHTML += `<tr><td>${yearLabels[i]}</td><td>${incomes[i].toFixed(2)}</td><td>${afterTaxReturns[i].toFixed(2)}</td><td>${balances[i].toFixed(2)}</td></tr>`;
+    tableHTML += `<tr><td>${yearLabels[i]}</td><td>${incomes[i].toFixed(2)}</td><td>${balances[i].toFixed(2)}</td></tr>`;
   }
   tableHTML += '</table>';
   tableContainer.innerHTML = tableHTML;
