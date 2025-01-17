@@ -13,6 +13,8 @@ function formatPercent(value) {
   return `${(value * 100).toFixed(2)}%`;
 }
 
+let chartInstance = null; // Store Chart.js instance
+
 function calculateCapital() {
   // Input values
   const income = parseFloat(document.getElementById('income').value);
@@ -101,7 +103,10 @@ function calculateCapital() {
 
   // Populate chart based on annual data
   const ctx = document.getElementById('chart').getContext('2d');
-  new Chart(ctx, {
+  if (chartInstance) {
+    chartInstance.destroy(); // Clear the existing chart instance
+  }
+  chartInstance = new Chart(ctx, {
     type: 'line',
     data: {
       labels: annualTableData.map(row => row.year !== "Initial" ? `Year ${row.year}` : "Initial"),
