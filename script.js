@@ -31,14 +31,22 @@ function calculateCapital() {
   let tableData = [];
   let accountBalance = totalCapital;
 
+  // Add initial row
+  tableData.push({
+    year: "Initial",
+    income: 0,
+    afterTaxReturn: 0,
+    accountBalance: accountBalance.toFixed(2),
+  });
+
   // Populate table data
   for (let year = 1; year <= years; year++) {
-    const annualIncome = income * Math.pow(1 + inflationRate, year - 1);
+    const annualIncome = year === 1 ? income : income * Math.pow(1 + inflationRate, year - 1);
     const afterTaxReturn = (accountBalance - annualIncome) * returnRate;
     tableData.push({
       year: year,
-      income: year === 1 ? 0 : annualIncome.toFixed(2),
-      afterTaxReturn: year === 1 ? 0 : afterTaxReturn.toFixed(2),
+      income: annualIncome.toFixed(2),
+      afterTaxReturn: afterTaxReturn.toFixed(2),
       accountBalance: accountBalance.toFixed(2),
     });
     accountBalance = accountBalance - annualIncome + afterTaxReturn;
@@ -53,17 +61,17 @@ function calculateCapital() {
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: tableData.map(row => `Year ${row.year}`),
+      labels: tableData.map(row => row.year),
       datasets: [
         {
           label: 'Account Balance',
-          data: tableData.map(row => row.accountBalance),
+          data: tableData.map(row => parseFloat(row.accountBalance)),
           borderColor: 'blue',
           fill: false,
         },
         {
           label: 'Income',
-          data: tableData.map(row => row.income),
+          data: tableData.map(row => parseFloat(row.income)),
           borderColor: 'green',
           fill: false,
         },
