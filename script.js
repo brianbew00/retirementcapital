@@ -13,28 +13,35 @@ function calculateCapital() {
   // Calculate monthly return rate
   const monthlyReturnRate = Math.pow(1 + returnRate, 1 / 12) - 1;
 
-  // Arrays to store data for chart and table
-  let balances = [];
-  let incomes = [];
-  let yearLabels = [];
+  // Calculate total capital needed
   let totalCapital = 0;
 
-  // Loop to calculate total capital needed using precise formula
   for (let year = 1; year <= years; year++) {
     const annualIncome = income * Math.pow(1 + inflationRate, year - 1);
     const monthlyIncome = annualIncome / 12;
 
-    let yearBalance = 0;
     for (let month = 1; month <= 12; month++) {
       const monthsElapsed = (year - 1) * 12 + month;
       const presentValue = monthlyIncome / Math.pow(1 + monthlyReturnRate, monthsElapsed);
       totalCapital += presentValue;
-      yearBalance += presentValue;
     }
+  }
 
-    balances.push(yearBalance);
-    incomes.push(annualIncome);
-    yearLabels.push(`Year ${year}`);
+  // Arrays to store data for the table
+  let tableData = [];
+  let accountBalance = totalCapital;
+
+  // Populate table data
+  for (let year = 1; year <= years; year++) {
+    const annualIncome = income * Math.pow(1 + inflationRate, year - 1);
+    const afterTaxReturn = (accountBalance - annualIncome) * returnRate;
+    tableData.push({
+      year: year,
+      income: year === 1 ? 0 : annualIncome.toFixed(2),
+      afterTaxReturn: year === 1 ? 0 : afterTaxReturn.toFixed(2),
+      accountBalance: accountBalance.toFixed(2),
+    });
+    accountBalance = accountBalance - annualIncome + afterTaxReturn;
   }
 
   // Display total capital needed
@@ -46,17 +53,17 @@ function calculateCapital() {
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: yearLabels,
+      labels: tableData.map(row => `Year ${row.year}`),
       datasets: [
         {
-          label: 'Account Balance (Annual PV)',
-          data: balances,
+          label: 'Account Balance',
+          data: tableData.map(row => row.accountBalance),
           borderColor: 'blue',
           fill: false,
         },
         {
           label: 'Income',
-          data: incomes,
+          data: tableData.map(row => row.income),
           borderColor: 'green',
           fill: false,
         },
@@ -74,10 +81,10 @@ function calculateCapital() {
   // Populate table
   const tableContainer = document.getElementById('table-container');
   let tableHTML = '<table border="1" style="width: 100%; border-collapse: collapse;">';
-  tableHTML += '<tr><th>Year</th><th>Income ($)</th><th>Account Balance (Annual PV) ($)</th></tr>';
-  for (let i = 0; i < years; i++) {
-    tableHTML += `<tr><td>${yearLabels[i]}</td><td>${incomes[i].toFixed(2)}</td><td>${balances[i].toFixed(2)}</td></tr>`;
-  }
+  tableHTML += '<tr><th>Year</th><th>Income ($)</th><th>After-Tax Return ($)</th><th>Account Balance ($)</th></tr>';
+  tableData.forEach(row => {
+    tableHTML += `<tr><td>${row.year}</td><td>${row.income}</td><td>${row.afterTaxReturn}</td><td>${row.accountBalance}</td></tr>`;
+  });
   tableHTML += '</table>';
   tableContainer.innerHTML = tableHTML;
 }
